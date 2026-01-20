@@ -1,0 +1,50 @@
+<?php
+
+namespace Tests\Unit;
+
+use PHPUnit\Framework\TestCase;
+use App\Services\ParserService; 
+
+class NotificationParserTest extends TestCase
+{
+    public function deve_identificar_e_ignorar_pix_recebido()
+    {
+        // Cenário: Uma notificação de entrada de dinheiro
+        $texto = "Pix recebido de R$ 50,00 de João";
+
+        // Ação: Chamamos nosso serviço
+        $resultado = ParserService::analisar($texto);
+
+        // Verificação: Esperamos que ele diga "IGNORAR"
+        $this->assertEquals('ignorado', $resultado['acao']);
+    }
+
+    public function deve_extrair_valor_e_loja_de_compra_simples()
+    {
+        // Cenário: Compra padrão
+        $texto = "Compra de R$ 30,00 no Mercado Livre";
+
+        // Ação
+        $resultado = ParserService::analisar($texto);
+
+        // Verificação
+        $this->assertEquals(30.00, $resultado['valor']); // Valor limpo (float)
+        $this->assertEquals('Mercado Livre', $resultado['loja']); // Nome da loja
+        $this->assertEquals(1, $resultado['parcelas']); // Padrão é 1x
+    }
+
+    public function deve_extrair_parcelas_quando_existirem()
+    {
+        // Cenário: Compra parcelada
+        $texto = "Compra de R$ 1200,00 em 12x na Kabum";
+
+        // Ação
+        $resultado = ParserService::analisar($texto);
+
+        // Verificação
+        // O valor retornado deve ser o valor DA PARCELA, não o total.
+        // R$ 1200 / 12 = R$ 100 por parcela.
+        $this->assertEquals(100.00, $resultado['valor']); 
+        $this->assertEquals(12, $resultado['parcelas']);
+    }
+}
