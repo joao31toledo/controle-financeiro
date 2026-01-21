@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 use App\Models\Notificacao;
@@ -13,6 +14,7 @@ class ExpenseCreationTest extends TestCase
 {
     use RefreshDatabase;
 
+    #[Test]
     public function deve_criar_uma_despesa_simples_a_partir_da_notificacao()
     {
         // 1. PREPARAR
@@ -42,6 +44,7 @@ class ExpenseCreationTest extends TestCase
         ]);
     }
 
+    #[Test]
     public function deve_explodir_despesas_parceladas()
     {
         // 1. PREPARAR

@@ -3,13 +3,15 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class WebhookReceptionTest extends TestCase
 {
     // O RefreshDatabase é apaga todas as tabelas e cria de novo ANTES de cada teste rodar. Assim, um teste nunca suja o banco do outro.
     use RefreshDatabase;
-
+    
+    #[Test]
     public function deve_receber_webhook_valido_e_salvar_bruto()
     {
         // 1. PREPARAR
@@ -23,7 +25,7 @@ class WebhookReceptionTest extends TestCase
 
         // 2. AGIR
         // Fingimos ser o celular enviando um POST para a nossa rota /api/webhook
-        $response = $this->postJson('/api/webhook', $payload);
+        $response = $this->postJson('/api/notificacoes', $payload);
 
         // 3. VERIFICAR
         
@@ -38,6 +40,7 @@ class WebhookReceptionTest extends TestCase
         ]);
     }
 
+    #[Test]
     public function deve_rejeitar_payload_incompleto()
     {
         // 1. PREPARAR
@@ -45,7 +48,7 @@ class WebhookReceptionTest extends TestCase
         $payloadRuim = [];
 
         // 2. AGIR
-        $response = $this->postJson('/api/webhook', $payloadRuim);
+        $response = $this->postJson('/api/notificacoes', $payloadRuim);
 
         // 3. VERIFICAR
         // Esperamos um erro 422 (Unprocessable Entity), que é o padrão do Laravel para erro de validação.
@@ -55,6 +58,7 @@ class WebhookReceptionTest extends TestCase
         $this->assertDatabaseCount('notificacoes', 0);
     }
 
+    #[Test]
     public function nao_deve_salvar_duplicatas_exatas()
     {
         // 1. PREPARAR
@@ -66,8 +70,8 @@ class WebhookReceptionTest extends TestCase
 
         // 2. AGIR
         // Enviamos a mesma notificação DUAS vezes seguidas.
-        $this->postJson('/api/webhook', $payload);
-        $this->postJson('/api/webhook', $payload);
+        $this->postJson('/api/notificacoes', $payload);
+        $this->postJson('/api/notificacoes', $payload);
 
         // 3. VERIFICAR
         // O banco deve ter apenas 1 registro, não 2. O sistema deve ser inteligente.

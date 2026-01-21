@@ -3,10 +3,13 @@
 namespace Tests\Unit;
 
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Services\ParserService; 
 
 class NotificationParserTest extends TestCase
 {
+    #[Test]
     public function deve_identificar_e_ignorar_pix_recebido()
     {
         // Cenário: Uma notificação de entrada de dinheiro
@@ -19,6 +22,7 @@ class NotificationParserTest extends TestCase
         $this->assertEquals('ignorado', $resultado['acao']);
     }
 
+    #[Test]
     public function deve_extrair_valor_e_loja_de_compra_simples()
     {
         // Cenário: Compra padrão
@@ -33,6 +37,7 @@ class NotificationParserTest extends TestCase
         $this->assertEquals(1, $resultado['parcelas']); // Padrão é 1x
     }
 
+    #[Test]
     public function deve_extrair_parcelas_quando_existirem()
     {
         // Cenário: Compra parcelada
