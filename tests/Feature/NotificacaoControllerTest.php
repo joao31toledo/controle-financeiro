@@ -16,7 +16,7 @@ class NotificacaoControllerTest extends TestCase
         // 1. PREPARAR
         $payload = [
             'pacote' => 'com.nubank',
-            'texto'  => 'Compra de R$ 80,00 no iFood',
+            'texto'  => 'Compra de R$ 80,00 em iFood para o cartão com final 2134',
             'title'  => 'Nubank',
             'time'   => '2026-01-26 20:00:00'
         ];
@@ -31,7 +31,7 @@ class NotificacaoControllerTest extends TestCase
         // B) Deve ter salvo a notificação crua
         $this->assertDatabaseHas('notificacoes', [
             'pacote' => 'com.nubank',
-            'texto'  => 'Compra de R$ 80,00 no iFood',
+            'texto'  => 'Compra de R$ 80,00 em iFood para o cartão com final 2134',
             'status' => 'processado', // O Service já deve ter rodado
         ]);
 
