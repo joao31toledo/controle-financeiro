@@ -6,13 +6,27 @@ class ParserService
 {
     public static function analisar(string $notificacao): array 
     {
-        $regex = '/Compra de\s+R\$\s*([\d,.]+)\s+(?:no|na|em)\s+(.+)/i';
+        $regex = '/Compra de\s+R\$\s*([\d,.]+)(?:\s+APROVADA)?\s+(?:no|na|em)\s+(.+)/i';
 
         if(preg_match($regex, $notificacao, $matches))
         {
-            return[
-                'valor' => self::converteValor($matches[1]),
-                'loja' => trim($matches[2]),
+            $valor = self::converteValor($matches[1]);
+            $loja = trim($matches[2]);
+            $cartao = null;
+
+            // Verifica se tem o padrão de cartão no final do nome da loja
+            if (preg_match('/para\s+o\s+cart.+\s+com\s+final\s+(\d+)/i', $loja, $cartaoMatch)) {
+                $cartao = $cartaoMatch[1];
+                
+                // Remove esse texto da loja
+                $loja = trim(str_replace($cartaoMatch[0], '', $loja));
+            }
+
+            return [
+                'acao' => 'criar_despesa',
+                'valor' => $valor,
+                'loja' => $loja,
+                'cartao' => $cartao, // Se não tiver cartão, vai null
                 'parcelas' => 1,
             ];
         }
