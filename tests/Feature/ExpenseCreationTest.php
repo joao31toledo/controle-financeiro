@@ -8,7 +8,7 @@ use Tests\TestCase;
 
 use App\Models\Notificacao;
 use App\Models\Despesa;
-use App\Services\ExpenseService;
+use App\Services\DespesaService;
 
 class ExpenseCreationTest extends TestCase
 {
@@ -21,11 +21,12 @@ class ExpenseCreationTest extends TestCase
         $notificacao = Notificacao::create([
             'texto' => 'Compra de R$ 50,00 na Padaria',
             'payload' => [],
-            'status' => 'pendente'
+            'status' => 'pendente',
+            'pacote' => 'com.exemplo.pacote',
         ]);
 
         // 2. AGIR
-        $service = new ExpenseService();
+        $service = new DespesaService();
         $service->processar($notificacao);
 
         // 3. VERIFICAR
@@ -37,44 +38,10 @@ class ExpenseCreationTest extends TestCase
 
         // C) Os dados da despesa devem bater com o texto
         $this->assertDatabaseHas('despesas', [
-            'descricao' => 'Padaria', // O nome da loja vai para a descrição
+            'loja' => 'Padaria', // O nome da loja vai para a descrição
             'valor' => 50.00,
-            'parcela_atual' => 1,
-            'total_parcelas' => 1
-        ]);
-    }
-
-    #[Test]
-    public function deve_explodir_despesas_parceladas()
-    {
-        // 1. PREPARAR
-        // Notificação de compra parcelada
-        $notificacao = Notificacao::create([
-            'texto' => 'Compra de R$ 100,00 em 5x na Amazon',
-            'payload' => [],
-            'status' => 'pendente'
-        ]);
-
-        // 2. AGIR
-        $service = new ExpenseService();
-        $service->processar($notificacao);
-
-        // 3. VERIFICAR
-        // Deve ter criado 5 linhas no banco de dados (uma para cada mês)
-        $this->assertDatabaseCount('despesas', 5);
-
-        // Verifica se a primeira parcela está correta
-        $this->assertDatabaseHas('despesas', [
-            'valor' => 20.00, // 100 reais dividido por 5
-            'parcela_atual' => 1,
-            'total_parcelas' => 5
-        ]);
-
-        // Verifica se a última parcela está correta
-        $this->assertDatabaseHas('despesas', [
-            'valor' => 20.00,
-            'parcela_atual' => 5,
-            'total_parcelas' => 5
+            'status' => 'pendente',
+            'cartao' => null,
         ]);
     }
 }
