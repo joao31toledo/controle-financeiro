@@ -44,4 +44,31 @@ class ExpenseCreationTest extends TestCase
             'cartao' => null,
         ]);
     }
+
+    #[Test]
+    public function deve_processar_corretamente_formato_nubank_com_cartao()
+    {
+        // 1. PREPARAR
+        $textoNubank = "Compra de R$ 24,20 APROVADA em OXXO ALCEU DE CAMPOS para o cartão com final 1234";
+        
+        $notificacao = Notificacao::create([
+            'texto' => $textoNubank,
+            'payload' => [],
+            'status' => 'pendente',
+            'pacote' => 'com.nubank', // Campo obrigatório
+        ]);
+
+        // 2. AGIR
+        $service = new DespesaService();
+        $service->processar($notificacao);
+
+        // 3. VERIFICAR
+        // A prova real: A despesa foi criada limpando o lixo?
+        $this->assertDatabaseHas('despesas', [
+            'loja' => 'OXXO ALCEU DE CAMPOS', // Sem o texto do cartão
+            'valor' => 24.20,
+            'cartao' => '1234', // Capturou o cartão?
+            'status' => 'pendente',
+        ]);
+    }
 }
