@@ -13,6 +13,13 @@ class Despesa extends Model
         'valor',
         'loja',
         'cartao',
-        'status'
+        'status',
+        'data_compra',
+    ];
+
+    protected $casts = [
+        'valor' => 'decimal:2',
+        'data_compra' => 'datetime',
     ];
 }
+
