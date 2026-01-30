@@ -8,7 +8,7 @@ use Tests\TestCase;
 
 use App\Models\Notificacao;
 use App\Models\Despesa;
-use App\Services\ExpenseService;
+use App\Services\DespesaService;
 
 class ExpenseCreationTest extends TestCase
 {
@@ -21,11 +21,12 @@ class ExpenseCreationTest extends TestCase
         $notificacao = Notificacao::create([
             'texto' => 'Compra de R$ 50,00 na Padaria',
             'payload' => [],
-            'status' => 'pendente'
+            'status' => 'pendente',
+            'pacote' => 'com.exemplo.pacote',
         ]);
 
         // 2. AGIR
-        $service = new ExpenseService();
+        $service = new DespesaService();
         $service->processar($notificacao);
 
         // 3. VERIFICAR
@@ -37,44 +38,37 @@ class ExpenseCreationTest extends TestCase
 
         // C) Os dados da despesa devem bater com o texto
         $this->assertDatabaseHas('despesas', [
-            'descricao' => 'Padaria', // O nome da loja vai para a descrição
+            'loja' => 'Padaria', // O nome da loja vai para a descrição
             'valor' => 50.00,
-            'parcela_atual' => 1,
-            'total_parcelas' => 1
+            'status' => 'pendente',
+            'cartao' => null,
         ]);
     }
 
     #[Test]
-    public function deve_explodir_despesas_parceladas()
+    public function deve_processar_corretamente_formato_nubank_com_cartao()
     {
         // 1. PREPARAR
-        // Notificação de compra parcelada
+        $textoNubank = "Compra de R$ 24,20 APROVADA em OXXO ALCEU DE CAMPOS para o cartão com final 1234";
+        
         $notificacao = Notificacao::create([
-            'texto' => 'Compra de R$ 100,00 em 5x na Amazon',
+            'texto' => $textoNubank,
             'payload' => [],
-            'status' => 'pendente'
+            'status' => 'pendente',
+            'pacote' => 'com.nubank', // Campo obrigatório
         ]);
 
         // 2. AGIR
-        $service = new ExpenseService();
+        $service = new DespesaService();
         $service->processar($notificacao);
 
         // 3. VERIFICAR
-        // Deve ter criado 5 linhas no banco de dados (uma para cada mês)
-        $this->assertDatabaseCount('despesas', 5);
-
-        // Verifica se a primeira parcela está correta
+        // A prova real: A despesa foi criada limpando o lixo?
         $this->assertDatabaseHas('despesas', [
-            'valor' => 20.00, // 100 reais dividido por 5
-            'parcela_atual' => 1,
-            'total_parcelas' => 5
-        ]);
-
-        // Verifica se a última parcela está correta
-        $this->assertDatabaseHas('despesas', [
-            'valor' => 20.00,
-            'parcela_atual' => 5,
-            'total_parcelas' => 5
+            'loja' => 'OXXO ALCEU DE CAMPOS', // Sem o texto do cartão
+            'valor' => 24.20,
+            'cartao' => '1234', // Capturou o cartão?
+            'status' => 'pendente',
         ]);
     }
 }
