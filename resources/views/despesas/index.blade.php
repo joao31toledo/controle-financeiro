@@ -42,7 +42,7 @@
                         <tr>
                             <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                                 <p class="text-gray-900 whitespace-no-wrap">
-                                    {{ $despesa->created_at->format('d/m/Y H:i') }}
+                                    {{ $despesa->data_compra->setTimezone('America/Sao_Paulo')->format('d/m/Y H:i') }}
                                 </p>
                             </td>
                             <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->decimal('valor', 10, 2);
             $table->string('loja');
             $table->string('cartao')->nullable();
+            $table->dateTime('data_compra');
             $table->string('status')->default('pendente');
             $table->timestamps();
         });

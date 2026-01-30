@@ -11,73 +11,76 @@ use Carbon\Carbon;
 class SyncDespesas extends Command
 {
     protected $signature = 'despesas:sync';
-    protected $description = 'Busca notificações da Planilha e processa despesas';
+    protected $description = 'Sincroniza notificações do Sheets para o Banco de Dados';
 
     public function handle(DespesaService $despesaService)
     {
-        $this->info('Iniciando sincronização com o Google Sheets...');
+        $this->info('⚙️ Iniciando sincronização...');
 
         $spreadsheetId = env('GOOGLE_SPREADSHEET_ID');
         $sheetName = 'notificacoes';
 
-        // 1. Ler os dados da planilha
         $rows = Sheets::spreadsheet($spreadsheetId)->sheet($sheetName)->get();
 
-        // Se só tiver o cabeçalho (ou nem isso), para.
         if ($rows->count() <= 1) {
-            $this->info('💤 Nenhuma notificação nova encontrada.');
+            $this->info('💤 Nenhuma notificação nova.');
             return;
         }
 
-        // Pega o cabeçalho pra não processar ele
+        // Remove o cabeçalho
         $header = $rows->pull(0); 
-        
-        $this->info("Encontradas " . $rows->count() . " novas notificações. Processando...");
-
         $count = 0;
 
         foreach ($rows as $index => $row) {
-            // O Google Forms as vezes manda colunas vazias, vamos garantir
-            // A ordem deve ser: [0] => Data/Hora, [1] => Pacote, [2] => Texto
-            // Ajuste os índices conforme a ordem das colunas na sua planilha!
-            
-            // Dica: Dê um dd($row) aqui na primeira vez se der erro pra ver a ordem
             $pacote = $row[1] ?? 'desconhecido';
             $texto = $row[2] ?? '';
-            $dataHora = $row[3] ?? $row[0]; 
+            $dataRaw = $row[3] ?? $row[0] ?? null; 
 
             if (empty($texto)) continue;
 
-            $this->comment(" > Processando: $texto");
+            try {
+                // LÓGICA LIMPA E PADRÃO
+                if (is_numeric($dataRaw)) {
+                    // Se for Timestamp (Macrodroid), cria direto (UTC)
+                    $dataNotificacao = Carbon::createFromTimestamp((int)$dataRaw);
+                } elseif ($dataRaw && str_contains($dataRaw, '/')) {
+                    // Se for Texto BR (30/01/2026), cria respeitando formato
+                    $dataNotificacao = Carbon::createFromFormat('d/m/Y H:i:s', $dataRaw);
+                } else {
+                    // Tenta parsing padrão
+                    $dataNotificacao = Carbon::parse($dataRaw);
+                }
+            } catch (\Throwable $e) {
+                // Se falhar, usa data atual
+                $dataNotificacao = now();
+            }
 
-            // 2. Criar a Notificação no Banco Local (Backup)
-            // Usamos firstOrCreate para evitar duplicação se rodar 2x sem querer
+            $this->comment(" > Processando: $texto"); 
+
+            // Salva no banco (Laravel converte pra UTC automaticamente se precisar)
             $notificacao = Notificacao::firstOrCreate(
                 [
                     'texto' => $texto, 
-                    'data_notificacao' => Carbon::parse($dataHora) // Tenta converter a data do Google
+                    'data_notificacao' => $dataNotificacao 
                 ],
                 [
                     'pacote' => $pacote,
                     'titulo' => 'Importado via Sheets',
-                    'payload' => ['origem' => 'google_sheets'],
+                    'payload' => ['origem' => 'google_sheets', 'data_original' => $dataRaw],
                     'status' => 'pendente'
                 ]
             );
 
-            // 3. Chamar o Serviço para virar Despesa
             if ($notificacao->wasRecentlyCreated || $notificacao->status === 'pendente') {
                 $despesaService->processar($notificacao);
                 $count++;
             }
         }
 
-        // 4. Limpar a planilha (Inbox Zero)
+        // Limpa a planilha após processar
         Sheets::spreadsheet($spreadsheetId)->sheet($sheetName)->clear();
-        
-        // Recria o cabeçalho pra não ficar feio
         Sheets::spreadsheet($spreadsheetId)->sheet($sheetName)->append([$header]);
 
-        $this->success("Sucesso! $count notificações processadas e planilha limpa.");
+        $this->info("✅ Sucesso! $count notificações processadas e planilha limpa.");
     }
 }

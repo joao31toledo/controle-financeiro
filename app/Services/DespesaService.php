@@ -14,7 +14,8 @@ class DespesaService
         if (!empty($dados)) {
             
             $dados['status'] = 'pendente';
-
+            $dados['data_compra'] = $notificacao->data_notificacao;
+            
             Despesa::create($dados);
 
             //Marca a notificação como processada para não ler de novo
