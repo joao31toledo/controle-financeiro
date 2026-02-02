@@ -10,10 +10,17 @@ class Notificacao extends Model
     use HasFactory;
 
     protected $table = 'notificacoes';
-    
-    protected $guarded = [];
-    
+
     protected $casts = [
         'payload' => 'array',
+    ];
+    
+    protected $fillable = [
+        'texto',
+        'pacote',
+        'titulo',
+        'data_notificacao',
+        'payload',
+        'status'
     ];
 }

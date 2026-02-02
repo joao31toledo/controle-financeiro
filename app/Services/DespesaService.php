@@ -9,7 +9,7 @@ class DespesaService
 {
     public function processar(Notificacao $notificacao): void
     {
-        $dados = ParserService::analisar($notificacao->texto);
+        $dados = ParserService::analisar($notificacao->texto, $notificacao->titulo);
 
         if (!empty($dados)) {
             

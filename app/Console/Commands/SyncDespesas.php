@@ -15,7 +15,7 @@ class SyncDespesas extends Command
 
     public function handle(DespesaService $despesaService)
     {
-        $this->info('⚙️ Iniciando sincronização...');
+        $this->info('Iniciando sincronização...');
 
         $spreadsheetId = env('GOOGLE_SPREADSHEET_ID');
         $sheetName = 'notificacoes';
@@ -23,7 +23,7 @@ class SyncDespesas extends Command
         $rows = Sheets::spreadsheet($spreadsheetId)->sheet($sheetName)->get();
 
         if ($rows->count() <= 1) {
-            $this->info('💤 Nenhuma notificação nova.');
+            $this->info('Nenhuma notificação nova.');
             return;
         }
 
@@ -34,12 +34,12 @@ class SyncDespesas extends Command
         foreach ($rows as $index => $row) {
             $pacote = $row[1] ?? 'desconhecido';
             $texto = $row[2] ?? '';
-            $dataRaw = $row[3] ?? $row[0] ?? null; 
+            $dataRaw = $row[3] ?? $row[0] ?? null;
+            $titulo = $row[4] ?? '';
 
             if (empty($texto)) continue;
 
             try {
-                // LÓGICA LIMPA E PADRÃO
                 if (is_numeric($dataRaw)) {
                     // Se for Timestamp (Macrodroid), cria direto (UTC)
                     $dataNotificacao = Carbon::createFromTimestamp((int)$dataRaw);
@@ -65,7 +65,7 @@ class SyncDespesas extends Command
                 ],
                 [
                     'pacote' => $pacote,
-                    'titulo' => 'Importado via Sheets',
+                    'titulo' => $titulo,
                     'payload' => ['origem' => 'google_sheets', 'data_original' => $dataRaw],
                     'status' => 'pendente'
                 ]
@@ -79,7 +79,6 @@ class SyncDespesas extends Command
 
         // Limpa a planilha após processar
         Sheets::spreadsheet($spreadsheetId)->sheet($sheetName)->clear();
-        Sheets::spreadsheet($spreadsheetId)->sheet($sheetName)->append([$header]);
 
         $this->info("✅ Sucesso! $count notificações processadas e planilha limpa.");
     }
