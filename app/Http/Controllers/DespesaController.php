@@ -27,9 +27,10 @@ class DespesaController extends Controller
             'valor' => 'required|numeric',
             'data_compra' => 'required|date',
             'cartao' => 'string|max:255',
-            'status' => 'required|string|max:255',
         ]);
-
+        
+        $dadosValidados['status'] = 'verificado';
+        
         Despesa::create($dadosValidados);
         
         return redirect()->route('despesas.index')
