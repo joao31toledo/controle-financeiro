@@ -12,5 +12,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-
-Route::get('/despesas', [DespesaController::class, 'index'])->name('despesas.index');
+Route::resource('despesas', DespesaController::class);
