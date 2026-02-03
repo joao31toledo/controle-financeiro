@@ -9,7 +9,7 @@
 @section('content')
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3">💸 Controle de Despesas</h1>
+    <h1 class="h3">Controle de Despesas</h1>
     <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill">
         Total: R$ {{ number_format($despesas->sum('valor'), 2, ',', '.') }}
     </span>
@@ -19,42 +19,64 @@
 
 <div class="card shadow-sm border-0">
     <div class="card-body">
-        <table id="tabelaDespesas" class="table table-hover w-100">
-            <thead class="table-light">
-                <tr>
-                    <th>Data</th>
-                    <th>Loja / Descrição</th>
-                    <th>Cartão</th>
-                    <th>Valor</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($despesas as $despesa)
-                    <tr>
-                        <td data-order="{{ $despesa->data_compra->format('YmdHis') }}">
-                            {{ $despesa->data_compra->setTimezone('America/Sao_Paulo')->format('d/m/Y H:i') }}
-                        </td>
-                        <td class="fw-bold text-secondary">
-                            {{ $despesa->loja ?? 'Não identificado' }}
-                        </td>
-                        <td>
-                            {{ $despesa->cartao ?? '-' }}
-                        </td>
-                        <td>
-                            <span class="badge bg-success-subtle text-success-emphasis rounded-pill">
-                                R$ {{ number_format($despesa->valor, 2, ',', '.') }}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="badge border border-secondary text-secondary rounded-pill">
-                                {{ ucfirst($despesa->status) }}
-                            </span>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+       <table id="tabelaDespesas" class="table table-hover w-100">
+    <thead class="table-light">
+        <tr>
+            <th>Data</th>
+            <th>Loja / Descrição</th>
+            <th>Cartão</th>
+            <th>Valor</th>
+            <th class="text-center">Status</th> 
+            <th class="text-end">Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($despesas as $despesa)
+            <tr>
+                <td data-order="{{ $despesa->data_compra->format('Ymd') }}">
+                    {{ $despesa->data_compra->format('d/m/Y') }}
+                </td>
+
+                <td class="fw-bold text-secondary">
+                    {{ $despesa->loja ?? 'Não identificado' }}
+                </td>
+
+                <td>
+                    {{ $despesa->cartao ?? '-' }}
+                </td>
+
+                <td>
+                    <span class="fw-bold text-success">
+                        R$ {{ number_format($despesa->valor, 2, ',', '.') }}
+                    </span>
+                </td>
+
+                <td class="text-center">
+                    <span class="badge rounded-pill">
+                        {{ $despesa->status }}
+                    </span>
+                </td>
+
+                <td class="text-end">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="{{ route('despesas.edit', $despesa->id) }}" class="btn btn-sm btn-outline-primary" title="Editar">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+
+                        <form action="{{ route('despesas.destroy', $despesa->id) }}" method="POST" 
+                              onsubmit="return confirm('Tem certeza que deseja apagar essa despesa?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
     </div>
 </div>
 

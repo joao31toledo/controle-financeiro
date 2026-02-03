@@ -42,9 +42,26 @@ class DespesaController extends Controller
         return view ('despesas.edit', compact('despesa'));
     }
 
-    public function update()
-    {}
+    public function update(Request $request, Despesa $despesa)
+    {
+        $dados = $request->validate([
+            'loja' => 'required|string|max:255',
+            'valor' => 'required|numeric',
+            'data_compra' => 'required|date',
+            'cartao' => 'required|string|max:255',
+        ]);
 
-    public function delete()
-    {}
+        $despesa->update($dados);
+
+        return redirect()->route('despesas.index')
+                         ->with('success', 'Despesa atualizada com sucesso!');
+    }
+
+    public function destroy(Despesa $despesa)
+    {
+        $despesa->delete();
+
+        return redirect()->route('despesas.index')
+                         ->with('success', 'Despesa removida com sucesso!');
+    }
 }

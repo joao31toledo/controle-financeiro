@@ -19,7 +19,7 @@
     <nav class="navbar navbar-expand-lg fixed-top bg-body-tertiary border-bottom">
       <div class="container">
         <a class="navbar-brand" href="{{ route('despesas.index') }}">
-            <i class="bi bi-wallet2"></i> Minhas Finanças
+            Controle Financeiro
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
           <span class="navbar-toggler-icon"></span>
